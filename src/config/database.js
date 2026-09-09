@@ -1,12 +1,23 @@
-const { Sequelize } = require('sequelize')
-const path = require('path')
+const { Sequelize } = require('sequelize');
 
-// Instancia a conexão com o banco SQLite
-const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: path.resolve(__dirname, '..', '..', 'database.sqlite'),
-  logging: false
-})
+const isProduction = process.env.NODE_ENV === 'production' || process.env.DATABASE_URL;
 
-// EXPORTAÇÃO DIRETA DA INSTÂNCIA (Crucial para o .define funcionar)
-module.exports = sequelize
+const sequelize = process.env.DATABASE_URL
+  ? new Sequelize(process.env.DATABASE_URL, {
+      dialect: 'postgres',
+      protocol: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false // Necessário para conexões SSL no Render/Supabase
+        }
+      },
+      logging: false
+    })
+  : new Sequelize({
+      dialect: 'sqlite',
+      storage: './database.sqlite',
+      logging: false
+    });
+
+module.exports = sequelize;
